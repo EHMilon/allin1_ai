@@ -168,7 +168,9 @@ class AuthAlternativesScreen
       elevation: 3,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(
+          12,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(
             16,
@@ -353,121 +355,131 @@ class AuthAlternativesScreen
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        builder: (context, scrollController) => Column(
-          children: [
-            const Text(
-              'Alternative AI Platforms',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            const Text(
-              'These platforms work without Google authentication:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: platforms.length,
-                itemBuilder: (
+      builder:
+          (
+            context,
+          ) => DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            maxChildSize: 0.9,
+            minChildSize: 0.5,
+            builder:
+                (
                   context,
-                  index,
-                ) {
-                  final platform = platforms[index];
-                  return Card(
-                    margin: const EdgeInsets.only(
-                      bottom: 12,
+                  scrollController,
+                ) => Column(
+                  children: [
+                    const Text(
+                      'Alternative AI Platforms',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getReliabilityColor(
-                          platform['reliability'],
-                        ),
-                        child: Text(
-                          platform['name'][0],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    const Text(
+                      'These platforms work without Google authentication:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
                       ),
-                      title: Text(
-                        platform['name'],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            platform['description'],
-                          ),
-                          const SizedBox(
-                            height: 4,
-                          ),
-                          Row(
-                            children: [
-                              Icon(
-                                platform['authMethod'] == 'email'
-                                    ? Icons.email
-                                    : Icons.login,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(
-                                width: 4,
-                              ),
-                              Expanded(
-                                child: Text(
-                                  platform['authMethod'] == 'email'
-                                      ? 'Email/Password'
-                                      : 'No login required',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: platforms.length,
+                        itemBuilder:
+                            (
+                              context,
+                              index,
+                            ) {
+                              final platform = platforms[index];
+                              return Card(
+                                margin: const EdgeInsets.only(
+                                  bottom: 12,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(
-                            context,
-                          );
-                          AlternativeAuthSolutions.openWithNativeBrowser(
-                            platform['url'],
-                          );
-                        },
-                        child: const Text(
-                          'Open',
-                        ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: _getReliabilityColor(
+                                      platform['reliability'],
+                                    ),
+                                    child: Text(
+                                      platform['name'][0],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    platform['name'],
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        platform['description'],
+                                      ),
+                                      const SizedBox(
+                                        height: 4,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            platform['authMethod'] ==
+                                                    'email'
+                                                ? Icons.email
+                                                : Icons.login,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(
+                                            width: 4,
+                                          ),
+                                          Expanded(
+                                            child: Text(
+                                              platform['authMethod'] ==
+                                                      'email'
+                                                  ? 'Email/Password'
+                                                  : 'No login required',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pop(
+                                        context,
+                                      );
+                                      AlternativeAuthSolutions.openWithNativeBrowser(
+                                        platform['url'],
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Open',
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+                  ],
+                ),
+          ),
     );
   }
 
@@ -476,72 +488,75 @@ class AuthAlternativesScreen
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'App-to-App Authentication',
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'This method tries to open the official Google or Microsoft apps for authentication.',
+      builder:
+          (
+            context,
+          ) => AlertDialog(
+            title: const Text(
+              'App-to-App Authentication',
             ),
-            SizedBox(
-              height: 16,
+            content: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'This method tries to open the official Google or Microsoft apps for authentication.',
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Requirements:',
+                ),
+                Text(
+                  '• Google app or Chrome browser installed',
+                ),
+                Text(
+                  '• Microsoft Authenticator or Edge browser',
+                ),
+                Text(
+                  '• Already signed in to these apps',
+                ),
+              ],
             ),
-            Text(
-              'Requirements:',
-            ),
-            Text(
-              '• Google app or Chrome browser installed',
-            ),
-            Text(
-              '• Microsoft Authenticator or Edge browser',
-            ),
-            Text(
-              '• Already signed in to these apps',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(
-              context,
-            ),
-            child: const Text(
-              'Cancel',
-            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(
+                  context,
+                ),
+                child: const Text(
+                  'Cancel',
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(
+                    context,
+                  );
+                  AlternativeAuthSolutions.setupDeepLinkAuth(
+                    context,
+                    'google',
+                  );
+                },
+                child: const Text(
+                  'Try Google App',
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(
+                    context,
+                  );
+                  AlternativeAuthSolutions.setupDeepLinkAuth(
+                    context,
+                    'microsoft',
+                  );
+                },
+                child: const Text(
+                  'Try Microsoft App',
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(
-                context,
-              );
-              AlternativeAuthSolutions.setupDeepLinkAuth(
-                context,
-                'google',
-              );
-            },
-            child: const Text(
-              'Try Google App',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(
-                context,
-              );
-              AlternativeAuthSolutions.setupDeepLinkAuth(
-                context,
-                'microsoft',
-              );
-            },
-            child: const Text(
-              'Try Microsoft App',
-            ),
-          ),
-        ],
-      ),
     );
   }
 

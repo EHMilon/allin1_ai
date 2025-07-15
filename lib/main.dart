@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:allin1_ai/home_screen.dart';
-import 'package:allin1_ai/oauth_manager.dart';
+import 'package:allin1_ai/screens/home_screen.dart';
+import 'package:allin1_ai/auth/oauth_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

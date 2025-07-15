@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:allin1_ai/settings_screen.dart';
-import 'package:allin1_ai/auth_alternatives_screen.dart';
-import 'package:allin1_ai/simple_auth_screen.dart';
-import 'package:allin1_ai/web_view_screen.dart';
-import 'package:allin1_ai/demo_google_auth.dart';
+import 'package:allin1_ai/screens/settings_screen.dart';
+import 'package:allin1_ai/auth/auth_alternatives_screen.dart';
+import 'package:allin1_ai/auth/simple_auth_screen.dart';
+import 'package:allin1_ai/auth/web_view_screen.dart';
+import 'package:allin1_ai/auth/demo_google_auth.dart';
 
 class HomeScreen
     extends

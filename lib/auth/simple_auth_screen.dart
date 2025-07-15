@@ -167,16 +167,27 @@ class SimpleAuthScreen
               height: 32,
             ),
 
-            // Option 2: Try in App
+            // Option 2: Try in App (only for non-Google services, or as a last resort for Google)
             OutlinedButton.icon(
-              onPressed: () => _openInApp(
-                context,
-              ),
+              onPressed: () {
+                if (_isGoogleService()) {
+                  GoogleAuthSolution.handleGoogleSignIn(
+                    context,
+                    platformUrl,
+                  );
+                } else {
+                  _openInApp(
+                    context,
+                  );
+                }
+              },
               icon: const Icon(
                 Icons.web,
               ),
-              label: const Text(
-                'Try in App',
+              label: Text(
+                _isGoogleService()
+                    ? 'Try In-App (Not Recommended for Google)'
+                    : 'Try in App',
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -193,8 +204,8 @@ class SimpleAuthScreen
             ),
             Text(
               _isGoogleService()
-                  ? '⚠ Google blocks WebView sign-ins\n⚠ May show security warnings\n⚠ Use other options instead'
-                  : '⚠ May have sign-in restrictions\n⚠ Use if browser option doesn\'t work',
+                  ? '⚠ Google actively blocks sign-ins from embedded WebViews for security reasons. This option is a last resort and likely to fail or show security warnings.'
+                  : 'This option uses an in-app WebView. It might have sign-in restrictions for some services. Use if the browser option doesn\'t work or for non-critical content.',
               style: TextStyle(
                 color: _isGoogleService()
                     ? Colors.red
@@ -215,15 +226,23 @@ class SimpleAuthScreen
               ),
               decoration: BoxDecoration(
                 color: _isGoogleService()
-                    ? Colors.red.withOpacity(0.1)
-                    : Colors.blue.withOpacity(0.1),
+                    ? Colors.red.withOpacity(
+                        0.1,
+                      )
+                    : Colors.blue.withOpacity(
+                        0.1,
+                      ),
                 borderRadius: BorderRadius.circular(
                   8,
                 ),
                 border: Border.all(
                   color: _isGoogleService()
-                      ? Colors.red.withOpacity(0.3)
-                      : Colors.blue.withOpacity(0.3),
+                      ? Colors.red.withOpacity(
+                          0.3,
+                        )
+                      : Colors.blue.withOpacity(
+                          0.3,
+                        ),
                 ),
               ),
               child: Column(
