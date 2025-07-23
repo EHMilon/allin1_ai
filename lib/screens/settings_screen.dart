@@ -104,52 +104,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _showTroubleshootingDialog() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sign-in Troubleshooting'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'If you\'re having trouble signing in:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              const Text('1. Google Sign-in "Browser not secure" error:'),
-              const Text('   • Use the "Fix Authentication Issues" option in the WebView menu'),
-              const Text('   • Try clearing cache and cookies'),
-              const Text('   • Switch to desktop mode'),
-              const SizedBox(height: 12),
-              const Text('2. Email login loading indefinitely:'),
-              const Text('   • Clear all data from settings'),
-              const Text('   • Restart the app'),
-              const Text('   • Check your internet connection'),
-              const SizedBox(height: 12),
-              const Text('3. General authentication issues:'),
-              const Text('   • Enable JavaScript (should be on by default)'),
-              const Text('   • Try opening in external browser'),
-              const Text('   • Disable VPN if using one'),
-              const SizedBox(height: 12),
-              const Text('4. If problems persist:'),
-              const Text('   • Try a different network'),
-              const Text('   • Update the app if available'),
-              const Text('   • Contact support'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -242,17 +196,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 title: const Text('Developer'),
                 subtitle: const Text('AI Assistant Team'),
                 trailing: const Icon(Icons.person_outline),
-              ),
-              ListTile(
-                title: const Text('Supported Platforms'),
-                subtitle: const Text('ChatGPT, Gemini, Copilot, Claude, Perplexity'),
-                trailing: const Icon(Icons.devices),
-              ),
-              ListTile(
-                title: const Text('Troubleshooting'),
-                subtitle: const Text('Fix common sign-in issues'),
-                trailing: const Icon(Icons.help_outline),
-                onTap: _showTroubleshootingDialog,
               ),
             ],
           ),

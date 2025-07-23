@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:allin1_ai/screens/home_screen.dart';
-import 'package:allin1_ai/auth/oauth_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize OAuth manager
-  await OAuthManager.initialize();
   
   runApp(const ProviderScope(child: MyApp()));
 }

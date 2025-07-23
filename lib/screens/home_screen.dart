@@ -1,70 +1,195 @@
 import 'package:flutter/material.dart';
 import 'package:allin1_ai/screens/settings_screen.dart';
-import 'package:allin1_ai/auth/auth_alternatives_screen.dart';
-import 'package:allin1_ai/auth/simple_auth_screen.dart';
-import 'package:allin1_ai/auth/web_view_screen.dart';
-import 'package:allin1_ai/auth/demo_google_auth.dart';
+import 'package:allin1_ai/screens/web_view_screen.dart';
+import 'package:allin1_ai/utils/provider_storage.dart';
 
-class HomeScreen
-    extends
-        StatelessWidget {
-  final List<
-    Map<
-      String,
-      dynamic
-    >
-  >
-  aiProviders = [
-    {
-      'name': 'ChatGPT',
-      'webUrl': 'https://chat.openai.com/',
-      'logo': 'assets/chatgpt_logo.png',
-      'icon': Icons.chat_bubble_outline,
-      'color': Colors.green,
-      'description': 'OpenAI\'s conversational AI assistant',
-    },
-    {
-      'name': 'Google Gemini',
-      'webUrl': 'https://gemini.google.com/',
-      'logo': 'assets/gemini_logo.png',
-      'icon': Icons.auto_awesome,
-      'color': Colors.blue,
-      'description': 'Google\'s advanced AI model',
-    },
-    {
-      'name': 'Microsoft Copilot',
-      'webUrl': 'https://copilot.microsoft.com/',
-      'logo': 'assets/copilot_logo.png',
-      'icon': Icons.code,
-      'color': Colors.orange,
-      'description': 'Microsoft\'s AI-powered assistant',
-    },
-    {
-      'name': 'Claude',
-      'webUrl': 'https://claude.ai/',
-      'logo': 'assets/claude_logo.png',
-      'icon': Icons.psychology,
-      'color': Colors.purple,
-      'description': 'Anthropic\'s helpful AI assistant',
-    },
-    {
-      'name': 'Perplexity',
-      'webUrl': 'https://www.perplexity.ai/',
-      'logo': 'assets/perplexity_logo.png',
-      'icon': Icons.search,
-      'color': Colors.teal,
-      'description': 'AI-powered search and research',
-    },
-  ];
-
-  HomeScreen({
-    super.key,
-  });
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  List<Map<String, dynamic>> _providers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProviders();
+  }
+
+  Future<void> _loadProviders() async {
+    // Try loading saved list
+    final saved = await ProviderStorage.load();
+    if (!mounted) return; // Address BuildContext across async gaps warning
+    if (saved != null) {
+      setState(() => _providers = saved);
+      return;
+    }
+    
+    // Fallback to built-in defaults
+    final defaultProviders = [
+      {
+        'name': 'ChatGPT',
+        'webUrl': 'https://chat.openai.com/',
+        'logoUrl': null,
+        'icon': Icons.chat_bubble_outline.codePoint,
+        'color': Colors.green.value, // Reverted to .value
+        'description': 'OpenAI\'s conversational AI assistant',
+        'isCustom': false,
+      },
+      {
+        'name': 'Google Gemini',
+        'webUrl': 'https://gemini.google.com/',
+        'logoUrl': null,
+        'icon': Icons.auto_awesome.codePoint,
+        'color': Colors.blue.value, // Reverted to .value
+        'description': 'Google\'s advanced AI model',
+        'isCustom': false,
+      },
+      {
+        'name': 'Microsoft Copilot',
+        'webUrl': 'https://copilot.microsoft.com/',
+        'logoUrl': null,
+        'icon': Icons.code.codePoint,
+        'color': Colors.orange.value, // Reverted to .value
+        'description': 'Microsoft\'s AI-powered assistant',
+        'isCustom': false,
+      },
+      {
+        'name': 'Claude',
+        'webUrl': 'https://claude.ai/',
+        'logoUrl': null,
+        'icon': Icons.psychology.codePoint,
+        'color': Colors.purple.value, // Reverted to .value
+        'description': 'Anthropic\'s helpful AI assistant',
+        'isCustom': false,
+      },
+      {
+        'name': 'Perplexity',
+        'webUrl': 'https://www.perplexity.ai/',
+        'logoUrl': null,
+        'icon': Icons.search.codePoint,
+        'color': Colors.teal.value, // Reverted to .value
+        'description': 'AI-powered search and research',
+        'isCustom': false,
+      },
+    ];
+
+    for (var provider in defaultProviders) {
+      provider['logoUrl'] = _faviconUrl(provider['webUrl'] as String);
+    }
+
+    _providers = defaultProviders;
+    await _saveProviders();
+    setState(() {});
+  }
+
+  Future<void> _saveProviders() async {
+    await ProviderStorage.save(_providers);
+  }
+
+  String _faviconUrl(String pageUrl) {
+    try {
+      final uri = Uri.parse(pageUrl);
+      final domain = uri.host;
+      return 'https://www.google.com/s2/favicons?sz=64&domain=$domain';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  Future<void> _showAddDialog() async {
+    final nameCtl = TextEditingController();
+    final urlCtl = TextEditingController();
+    final descCtl = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Custom Website'),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameCtl,
+                decoration: const InputDecoration(
+                  labelText: 'AI Provider Name',
+                  hintText: 'e.g., DeepSeek',
+                ),
+                validator: (s) =>
+                    (s == null || s.trim().isEmpty)
+                        ? 'Please enter a name'
+                        : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: urlCtl,
+                decoration: const InputDecoration(
+                  labelText: 'Web Address',
+                  hintText: 'https://example.com',
+                ),
+                validator: (s) {
+                  if (s == null || s.trim().isEmpty) {
+                    return 'Please enter a URL';
+                  }
+                  final u = Uri.tryParse(s.trim());
+                  if (u == null || !u.hasScheme) return 'Invalid URL';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: descCtl,
+                decoration: const InputDecoration(
+                  labelText: 'Description (Optional)',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!mounted) return; // Address BuildContext across async gaps warning
+              if (!_formKey.currentState!.validate()) return;
+              final name = nameCtl.text.trim();
+              final url = urlCtl.text.trim();
+              final description = descCtl.text.trim();
+              final favicon = _faviconUrl(url);
+
+              setState(() {
+                _providers.add({
+                  'name': name,
+                  'webUrl': url,
+                  'logoUrl': favicon,
+                  'icon': Icons.link.codePoint,
+                  'color': Colors.grey.value, // Reverted to .value
+                  'description': description,
+                  'isCustom': true,
+                });
+              });
+              await _saveProviders();
+              if (!mounted) return; // Address BuildContext across async gaps warning
+              Navigator.pop(ctx);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -74,46 +199,10 @@ class HomeScreen
           ),
         ),
         elevation: 4,
-        backgroundColor: Theme.of(
-          context,
-        ).primaryColor,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.bug_report,
-            ),
-            tooltip: 'Google Sign-In Demo',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (
-                        context,
-                      ) => const DemoGoogleAuth(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.alt_route,
-            ),
-            tooltip: 'Authentication Alternatives',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (
-                        context,
-                      ) => const AuthAlternativesScreen(),
-                ),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(
               Icons.settings,
@@ -122,252 +211,135 @@ class HomeScreen
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder:
-                      (
-                        context,
-                      ) => const SettingsScreen(),
+                  builder: (context) => const SettingsScreen(),
                 ),
               );
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(
-          8.0,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Authentication alternatives banner
-              Container(
-                margin: const EdgeInsets.all(
-                  8.0,
-                ),
-                child: Card(
-                  color: Colors.blue.shade50,
-                  elevation: 2,
-                  child: InkWell(
+      body: Column(
+        children: [
+          // AI providers list
+          Expanded(
+            child: ReorderableListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              itemCount: _providers.length,
+              onReorder: (oldIndex, newIndex) async {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex--;
+                  final item = _providers.removeAt(oldIndex);
+                  _providers.insert(newIndex, item);
+                });
+                await _saveProviders();
+              },
+              itemBuilder: (context, index) {
+                final provider = _providers[index];
+                final name = provider['name'] as String;
+                final url = provider['webUrl'] as String;
+                final logoUrl = provider['logoUrl'] as String?;
+                final color = Color(provider['color'] as int);
+                final iconCode = provider['icon'] as int;
+                final iconData = IconData(iconCode, fontFamily: 'MaterialIcons');
+                final description = provider['description'] as String? ?? '';
+                // final isCustom = provider['isCustom'] as bool? ?? false; // Commented out to fix unused_local_variable warning
+
+                return Card(
+                  key: ValueKey(provider),
+                  margin: const EdgeInsets.symmetric(vertical: 6.0),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1), // Reverted to .withOpacity
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: logoUrl != null && logoUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                logoUrl,
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  iconData,
+                                  color: color,
+                                  size: 28,
+                                ),
+                              ),
+                            )
+                          : Icon(
+                              iconData,
+                              color: color,
+                              size: 28,
+                            ),
+                    ),
+                    title: Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    subtitle: description.isNotEmpty
+                        ? Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'remove') {
+                          setState(() {
+                            _providers.removeAt(index);
+                          });
+                          _saveProviders();
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'remove',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Remove', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder:
-                              (
-                                context,
-                              ) => const AuthAlternativesScreen(),
+                          builder: (_) => WebViewScreen(
+                            url: url,
+                            title: name,
+                          ),
                         ),
                       );
                     },
-                    borderRadius: BorderRadius.circular(
-                      12,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(
-                        16.0,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.blue.shade700,
-                            size: 24,
-                          ),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Having sign-in issues?',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 4,
-                                ),
-                                const Text(
-                                  'Tap for auth options • Long press for direct access',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.blue.shade700,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
-                ),
-              ),
-
-              // AI providers list
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: aiProviders.length,
-                itemBuilder:
-                    (
-                      context,
-                      index,
-                    ) {
-                      final provider = aiProviders[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 8.0,
-                          vertical: 6.0,
-                        ),
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            16,
-                          ),
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(
-                            16,
-                          ),
-                          onTap: () {
-                            // Determine platform key for OAuth
-                            String platformKey = provider['name']!.toLowerCase();
-                            if (platformKey.contains(
-                              'gemini',
-                            ))
-                              platformKey = 'google';
-                            if (platformKey.contains(
-                              'chatgpt',
-                            ))
-                              platformKey = 'openai';
-                            if (platformKey.contains(
-                              'copilot',
-                            )) {
-                              platformKey = 'microsoft';
-                            }
-                            if (platformKey.contains(
-                              'claude',
-                            )) {
-                              platformKey = 'anthropic';
-                            }
-                            if (platformKey.contains(
-                              'perplexity',
-                            )) {
-                              platformKey = 'perplexity';
-                            }
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (
-                                      context,
-                                    ) => SimpleAuthScreen(
-                                      platform: platformKey,
-                                      platformUrl: provider['webUrl']!,
-                                      platformName: provider['name']!,
-                                    ),
-                              ),
-                            );
-                          },
-                          onLongPress: () {
-                            // Direct WebView access on long press
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (
-                                      context,
-                                    ) => WebViewScreen(
-                                      url: provider['webUrl']!,
-                                      title: provider['name']!,
-                                    ),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(
-                              16.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        (provider['color']
-                                                as Color)
-                                            .withOpacity(
-                                              0.1,
-                                            ),
-                                    borderRadius: BorderRadius.circular(
-                                      12,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    provider['icon']
-                                        as IconData,
-                                    color:
-                                        provider['color']
-                                            as Color,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 16,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        provider['name']
-                                            as String,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 4,
-                                      ),
-                                      Text(
-                                        provider['description']
-                                            as String,
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.grey[400],
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-              ),
-            ],
+                );
+              },
+            ),
           ),
-        ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddDialog,
+        tooltip: 'Add Website',
+        child: const Icon(Icons.add),
       ),
     );
   }

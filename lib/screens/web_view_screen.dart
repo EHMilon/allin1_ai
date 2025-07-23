@@ -8,7 +8,6 @@ import 'dart:io'
 // Import webview packages
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' as iaw;
-import 'auth_helper.dart';
 
 class WebViewScreen
     extends
@@ -132,7 +131,6 @@ class _WebViewScreenState
                       },
                     );
                     _updateNavigationState();
-                    _injectSecurityHeaders();
                   }
                 },
             onWebResourceError:
@@ -316,35 +314,27 @@ class _WebViewScreenState
             }
           },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.title,
-          ),
-          backgroundColor: Theme.of(
-            context,
-          ).primaryColor,
-          foregroundColor: Colors.white,
-          actions: _buildActions(),
-        ),
-        body: Column(
-          children: [
-            if (isLoading)
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[200],
-                valueColor:
-                    AlwaysStoppedAnimation<
-                      Color
-                    >(
-                      Theme.of(
-                        context,
-                      ).primaryColor,
-                    ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              if (isLoading)
+                LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.grey[200],
+                  valueColor:
+                      AlwaysStoppedAnimation<
+                        Color
+                      >(
+                        Theme.of(
+                          context,
+                        ).primaryColor,
+                      ),
+                ),
+              Expanded(
+                child: _buildWebView(),
               ),
-            Expanded(
-              child: _buildWebView(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -384,86 +374,52 @@ class _WebViewScreenState
         ),
         onPressed: _reload,
       ),
-      if (useInAppWebView) ...[
-        PopupMenuButton<
-          String
-        >(
-          icon: const Icon(
-            Icons.more_vert,
-            color: Colors.white,
-          ),
-          onSelected: _handleMenuAction,
-          itemBuilder:
-              (
-                BuildContext context,
-              ) => [
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'clear_cache',
-                  child: Text(
-                    'Clear Cache',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'clear_cookies',
-                  child: Text(
-                    'Clear Cookies',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'desktop_mode',
-                  child: Text(
-                    'Toggle Desktop Mode',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'fix_auth',
-                  child: Text(
-                    'Fix Authentication Issues',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'fix_google_auth',
-                  child: Text(
-                    'Fix Google Sign-in Issues',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'auth_options',
-                  child: Text(
-                    'Authentication Options',
-                  ),
-                ),
-                const PopupMenuItem<
-                  String
-                >(
-                  value: 'open_browser',
-                  child: Text(
-                    'Open in Browser',
-                  ),
-                ),
-              ],
+      PopupMenuButton<
+        String
+      >(
+        icon: const Icon(
+          Icons.more_vert,
+          color: Colors.white,
         ),
-      ] else ...[
-        IconButton(
-          icon: const Icon(
-            Icons.open_in_browser,
-            color: Colors.white,
-          ),
-          onPressed: _launchInBrowser,
-        ),
-      ],
+        onSelected: _handleMenuAction,
+        itemBuilder:
+            (
+              BuildContext context,
+            ) => [
+              const PopupMenuItem<
+                String
+              >(
+                value: 'clear_cache',
+                child: Text(
+                  'Clear Cache',
+                ),
+              ),
+              const PopupMenuItem<
+                String
+              >(
+                value: 'clear_cookies',
+                child: Text(
+                  'Clear Cookies',
+                ),
+              ),
+              const PopupMenuItem<
+                String
+              >(
+                value: 'desktop_mode',
+                child: Text(
+                  'Toggle Desktop Mode',
+                ),
+              ),
+              const PopupMenuItem<
+                String
+              >(
+                value: 'open_browser',
+                child: Text(
+                  'Open in Browser',
+                ),
+              ),
+            ],
+      ),
     ];
   }
 
@@ -686,18 +642,6 @@ class _WebViewScreenState
         case 'desktop_mode':
           await _toggleDesktopMode();
           break;
-        case 'fix_auth':
-          await _handleAuthenticationIssues();
-          break;
-        case 'fix_google_auth':
-          await _handleGoogleAuthenticationIssues();
-          break;
-        case 'auth_options':
-          await AuthHelper.showAuthenticationOptions(
-            context,
-            widget.url,
-          );
-          break;
         case 'open_browser':
           await _launchInBrowser();
           break;
@@ -761,15 +705,7 @@ class _WebViewScreenState
             widget.url,
           ),
           headers: {
-            'User-Agent':
-                widget.url.contains(
-                      'google',
-                    ) ||
-                    widget.url.contains(
-                      'gemini',
-                    )
-                ? _getGoogleCompatibleUserAgent()
-                : _getSecureUserAgent(),
+            'User-Agent': _getSecureUserAgent(),
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -777,13 +713,6 @@ class _WebViewScreenState
             'Pragma': 'no-cache',
             'DNT': '1',
             'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-User': '?1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Ch-Ua': '"Chromium";v="123", "Not:A-Brand";v="8"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
           },
         ),
         initialSettings: iaw.InAppWebViewSettings(
@@ -795,7 +724,7 @@ class _WebViewScreenState
           allowsInlineMediaPlayback: true,
           allowFileAccessFromFileURLs: true,
           allowUniversalAccessFromFileURLs: true,
-          mixedContentMode: iaw.MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+          mixedContentMode: iaw.MixedContentMode.MIXED_CONTENT_COMPATIBILITY_MODE, // More secure
           cacheEnabled: true,
           clearCache: false,
           thirdPartyCookiesEnabled: true,
@@ -805,15 +734,7 @@ class _WebViewScreenState
           supportZoom: true,
           builtInZoomControls: true,
           displayZoomControls: false,
-          userAgent:
-              widget.url.contains(
-                    'google',
-                  ) ||
-                  widget.url.contains(
-                    'gemini',
-                  )
-              ? _getGoogleCompatibleUserAgent()
-              : _getSecureUserAgent(),
+          userAgent: _getSecureUserAgent(),
           useOnLoadResource: true,
           useOnDownloadStart: true,
           disableDefaultErrorPage: false,
@@ -865,10 +786,6 @@ class _WebViewScreenState
               );
               pullToRefreshController?.endRefreshing();
               await _updateNavigationState();
-              await _injectMobileOptimizations(
-                controller,
-              );
-
               if (mounted) {
                 setState(
                   () {
@@ -914,7 +831,7 @@ class _WebViewScreenState
                 } else if (error.description.toLowerCase().contains(
                   'timeout',
                 )) {
-                  errorMessage = 'Connection timeout. Please try again.';
+                  errorMessage = 'Connection timeout. Try again.';
                 }
 
                 _showErrorSnackBar(
@@ -1031,11 +948,6 @@ class _WebViewScreenState
     return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
   }
 
-  String _getGoogleCompatibleUserAgent() {
-    // Specific user agent optimized for Google services
-    return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0';
-  }
-
   Future<
     void
   >
@@ -1096,330 +1008,6 @@ class _WebViewScreenState
     }
   }
 
-  Future<
-    void
-  >
-  _handleAuthenticationIssues() async {
-    try {
-      if (inAppWebViewController !=
-          null) {
-        // Show loading indicator
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Applying advanced authentication fixes...',
-              ),
-              duration: Duration(
-                seconds: 2,
-              ),
-            ),
-          );
-        }
-
-        // Clear any problematic cookies that might cause auth issues
-        await iaw.CookieManager.instance().deleteAllCookies();
-
-        // Update user agent to Google-compatible version
-        await inAppWebViewController!.setSettings(
-          settings: iaw.InAppWebViewSettings(
-            userAgent: _getGoogleCompatibleUserAgent(),
-            javaScriptEnabled: true,
-            domStorageEnabled: true,
-            databaseEnabled: true,
-            thirdPartyCookiesEnabled: true,
-            cacheEnabled: true,
-            allowFileAccessFromFileURLs: true,
-            allowUniversalAccessFromFileURLs: true,
-            mixedContentMode: iaw.MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-          ),
-        );
-
-        // Inject comprehensive authentication helpers
-        await inAppWebViewController!.evaluateJavascript(
-          source: '''
-          // Comprehensive webdriver detection removal
-          const webdriverProps = [
-            '__webdriver_evaluate', '__webdriver_script_function', '__webdriver_script_func',
-            '__webdriver_script_fn', '__webdriver_unwrapped', '__webdriver_evaluate',
-            '__selenium_evaluate', '__selenium_unwrapped', '__fxdriver_evaluate',
-            '__fxdriver_unwrapped', '__driver_evaluate', '__driver_unwrapped',
-            'webdriver', '__webdriver', '_selenium', 'callSelenium', '_Selenium_IDE_Recorder'
-          ];
-          
-          webdriverProps.forEach(prop => {
-            try {
-              delete navigator[prop];
-              delete window[prop];
-            } catch(e) {}
-          });
-          
-          // Override webdriver property
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-            configurable: true
-          });
-          
-          // Add comprehensive Chrome object simulation
-          if (!window.chrome) {
-            window.chrome = {
-              runtime: {
-                onConnect: null,
-                onMessage: null,
-                connect: function() { return { postMessage: function() {}, onMessage: { addListener: function() {} } }; },
-                sendMessage: function() {},
-                getManifest: function() { return {}; },
-                getURL: function(path) { return 'chrome-extension://fake/' + path; }
-              },
-              loadTimes: function() {
-                return {
-                  commitLoadTime: Date.now() / 1000 - Math.random(),
-                  connectionInfo: 'h2',
-                  finishDocumentLoadTime: Date.now() / 1000 - Math.random(),
-                  finishLoadTime: Date.now() / 1000 - Math.random(),
-                  firstPaintAfterLoadTime: 0,
-                  firstPaintTime: Date.now() / 1000 - Math.random(),
-                  navigationType: 'Other',
-                  npnNegotiatedProtocol: 'h2',
-                  requestTime: Date.now() / 1000 - Math.random(),
-                  startLoadTime: Date.now() / 1000 - Math.random(),
-                  wasAlternateProtocolAvailable: false,
-                  wasFetchedViaSpdy: true,
-                  wasNpnNegotiated: true
-                };
-              },
-              csi: function() {
-                return {
-                  onloadT: Date.now(),
-                  pageT: Date.now() - performance.timing.navigationStart,
-                  startE: performance.timing.navigationStart,
-                  tran: 15
-                };
-              },
-              app: {
-                isInstalled: false,
-                InstallState: { DISABLED: 'disabled', INSTALLED: 'installed', NOT_INSTALLED: 'not_installed' },
-                RunningState: { CANNOT_RUN: 'cannot_run', READY_TO_RUN: 'ready_to_run', RUNNING: 'running' }
-              }
-            };
-          }
-          
-          // Override navigator properties to appear more legitimate
-          Object.defineProperty(navigator, 'plugins', {
-            get: () => [
-              { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
-              { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
-              { name: 'Native Client', filename: 'internal-nacl-plugin', description: '' }
-            ]
-          });
-          
-          Object.defineProperty(navigator, 'languages', {
-            get: () => ['en-US', 'en']
-          });
-          
-          Object.defineProperty(navigator, 'platform', {
-            get: () => 'Win32'
-          });
-          
-          // Override permissions API
-          if (navigator.permissions && navigator.permissions.query) {
-            const originalQuery = navigator.permissions.query;
-            navigator.permissions.query = function(parameters) {
-              return originalQuery(parameters).then(function(result) {
-                if (parameters.name === 'notifications') {
-                  return { state: 'granted' };
-                }
-                return result;
-              }).catch(() => ({ state: 'granted' }));
-            };
-          }
-          
-          // Add missing window properties
-          if (!window.outerHeight) window.outerHeight = screen.height;
-          if (!window.outerWidth) window.outerWidth = screen.width;
-          
-          // Override toString methods to hide modifications
-          const originalToString = Function.prototype.toString;
-          Function.prototype.toString = function() {
-            if (this === navigator.webdriver) {
-              return 'function webdriver() { [native code] }';
-            }
-            return originalToString.apply(this, arguments);
-          };
-          
-          console.log('Advanced authentication helpers injected');
-        ''',
-        );
-
-        // Wait a moment for the JavaScript to take effect
-        await Future.delayed(
-          const Duration(
-            milliseconds: 500,
-          ),
-        );
-
-        await inAppWebViewController!.reload();
-
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Advanced authentication fixes applied. Page reloaded with enhanced compatibility.',
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(
-                seconds: 3,
-              ),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          _showErrorSnackBar(
-            'WebView not available for authentication fixes',
-          );
-        }
-      }
-    } catch (
-      e
-    ) {
-      debugPrint(
-        'Error handling authentication issues: $e',
-      );
-      if (mounted) {
-        _showErrorSnackBar(
-          'Failed to apply authentication fixes: $e',
-        );
-      }
-    }
-  }
-
-  Future<
-    void
-  >
-  _handleGoogleAuthenticationIssues() async {
-    try {
-      if (inAppWebViewController !=
-          null) {
-        // Show loading indicator
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Applying Google-specific authentication fixes...',
-              ),
-              duration: Duration(
-                seconds: 2,
-              ),
-            ),
-          );
-        }
-
-        // Clear all cookies and cache
-        await iaw.CookieManager.instance().deleteAllCookies();
-        await iaw.InAppWebViewController.clearAllCache();
-
-        // Set Google-optimized settings
-        await inAppWebViewController!.setSettings(
-          settings: AuthHelper.getGoogleAuthSettings(),
-        );
-
-        // Inject advanced browser spoofing
-        await inAppWebViewController!.evaluateJavascript(
-          source: AuthHelper.getAdvancedBrowserSpoofingScript(),
-        );
-
-        // Wait for JavaScript to take effect
-        await Future.delayed(
-          const Duration(
-            milliseconds: 1000,
-          ),
-        );
-
-        // Navigate to Google sign-in page if not already there
-        String targetUrl = currentUrl;
-        if (!currentUrl.contains(
-          'accounts.google.com',
-        )) {
-          if (widget.url.contains(
-            'gemini',
-          )) {
-            targetUrl = 'https://gemini.google.com/';
-          } else if (widget.url.contains(
-            'google',
-          )) {
-            targetUrl = widget.url;
-          }
-        }
-
-        await inAppWebViewController!.loadUrl(
-          urlRequest: iaw.URLRequest(
-            url: iaw.WebUri(
-              targetUrl,
-            ),
-            headers: {
-              'User-Agent': _getGoogleCompatibleUserAgent(),
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Accept-Encoding': 'gzip, deflate, br',
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache',
-              'Sec-Ch-Ua': '"Chromium";v="123", "Not:A-Brand";v="8"',
-              'Sec-Ch-Ua-Mobile': '?0',
-              'Sec-Ch-Ua-Platform': '"Windows"',
-              'Sec-Fetch-Dest': 'document',
-              'Sec-Fetch-Mode': 'navigate',
-              'Sec-Fetch-Site': 'none',
-              'Sec-Fetch-User': '?1',
-              'Upgrade-Insecure-Requests': '1',
-            },
-          ),
-        );
-
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Google authentication fixes applied. Try signing in now.',
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(
-                seconds: 4,
-              ),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          _showErrorSnackBar(
-            'WebView not available for Google authentication fixes',
-          );
-        }
-      }
-    } catch (
-      e
-    ) {
-      debugPrint(
-        'Error handling Google authentication issues: $e',
-      );
-      if (mounted) {
-        _showErrorSnackBar(
-          'Failed to apply Google authentication fixes: $e',
-        );
-      }
-    }
-  }
-
   void _setupJavaScriptHandlers(
     iaw.InAppWebViewController controller,
   ) {
@@ -1443,180 +1031,11 @@ class _WebViewScreenState
               }
             },
       );
-
-      controller.addJavaScriptHandler(
-        handlerName: 'authHandler',
-        callback:
-            (
-              args,
-            ) {
-              try {
-                debugPrint(
-                  'Authentication event: $args',
-                );
-                // Handle authentication events
-                if (args.isNotEmpty &&
-                    args[0] ==
-                        'login_success') {
-                  debugPrint(
-                    'Login successful detected',
-                  );
-                } else if (args.isNotEmpty &&
-                    args[0] ==
-                        'login_error') {
-                  debugPrint(
-                    'Login error detected: ${args.length > 1 ? args[1] : 'Unknown error'}',
-                  );
-                }
-              } catch (
-                e
-              ) {
-                debugPrint(
-                  'Error handling authentication event: $e',
-                );
-              }
-            },
-      );
-
-      controller.addJavaScriptHandler(
-        handlerName: 'errorHandler',
-        callback:
-            (
-              args,
-            ) {
-              try {
-                debugPrint(
-                  'WebView error reported: $args',
-                );
-                if (mounted &&
-                    args.isNotEmpty) {
-                  _showErrorSnackBar(
-                    'Page error: ${args[0]}',
-                  );
-                }
-              } catch (
-                e
-              ) {
-                debugPrint(
-                  'Error handling WebView error: $e',
-                );
-              }
-            },
-      );
     } catch (
       e
     ) {
       debugPrint(
         'Error setting up JavaScript handlers: $e',
-      );
-    }
-  }
-
-  Future<
-    void
-  >
-  _injectMobileOptimizations(
-    iaw.InAppWebViewController controller,
-  ) async {
-    try {
-      const css = '''
-        body {
-          -webkit-touch-callout: none;
-          -webkit-user-select: none;
-          -khtml-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
-        }
-        
-        button, input, select, textarea, a {
-          min-height: 44px;
-          min-width: 44px;
-        }
-        
-        input, select, textarea {
-          font-size: 16px !important;
-        }
-      ''';
-
-      await controller.evaluateJavascript(
-        source:
-            '''
-        var style = document.createElement('style');
-        style.innerHTML = `$css`;
-        document.head.appendChild(style);
-        
-        // Inject security enhancements for authentication
-        window.addEventListener('load', function() {
-          // Override navigator properties to appear more like a real browser
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-          });
-          
-          // Add missing properties that some sites check for
-          if (!window.chrome) {
-            window.chrome = {
-              runtime: {},
-              loadTimes: function() {},
-              csi: function() {},
-            };
-          }
-          
-          // Enhance form submission for better compatibility
-          document.addEventListener('submit', function(e) {
-            setTimeout(function() {
-              if (e.target && e.target.tagName === 'FORM') {
-                console.log('Form submitted, ensuring proper handling');
-              }
-            }, 100);
-          });
-        });
-      ''',
-      );
-    } catch (
-      e
-    ) {
-      debugPrint(
-        'Error injecting mobile optimizations: $e',
-      );
-    }
-  }
-
-  Future<
-    void
-  >
-  _injectSecurityHeaders() async {
-    try {
-      if (webViewController !=
-          null) {
-        await webViewController!.runJavaScript(
-          '''
-          // Override navigator properties to appear more like a real browser
-          Object.defineProperty(navigator, 'webdriver', {
-            get: () => undefined,
-          });
-          
-          // Add missing properties that some sites check for
-          if (!window.chrome) {
-            window.chrome = {
-              runtime: {},
-              loadTimes: function() {},
-              csi: function() {},
-            };
-          }
-          
-          // Enhance authentication compatibility
-          window.addEventListener('load', function() {
-            console.log('Security enhancements loaded');
-          });
-        ''',
-        );
-      }
-    } catch (
-      e
-    ) {
-      debugPrint(
-        'Error injecting security headers: $e',
       );
     }
   }
